@@ -61,3 +61,12 @@ The annot=True part is what prints the actual number inside each cell (without i
 - Patients with HeartDisease tend to be slightly older (median ~50-60) vs without (~45-58)
 - Oldpeak shows positive correlation with HeartDisease (higher Oldpeak → more likely disease)
 - MaxHR shows negative correlation with HeartDisease (lower MaxHR → more likely disease)
+
+## Topic 6: Target Variable Analysis (`notebooks/06_target_variable_analysis.ipynb`)
+**Operations performed:**
+- `.value_counts()` and `.value_counts(normalize=True)` on HeartDisease
+- Countplot of HeartDisease
+
+**Findings:**
+- Class split: 55.3% HeartDisease=1, 44.7% HeartDisease=0
+- Dataset is well-balanced — no class imbalance issue for future modeling
