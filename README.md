@@ -69,4 +69,11 @@ The annot=True part is what prints the actual number inside each cell (without i
 
 **Findings:**
 - Class split: 55.3% HeartDisease=1, 44.7% HeartDisease=0
-- Dataset is well-balanced — no class imbalance issue for future modeling
+
+## Summary of Findings (Heart Failure Prediction)
+- **Dataset:** 918 patients, 12 columns. Target is `HeartDisease` (0 = no, 1 = yes), so it's a classification problem.
+- **Data quality:** no null values and no duplicate rows. Two columns had impossible zeros hidden in them: `RestingBP` (1 row) and `Cholesterol`. Both were replaced with the median of the valid values in that column.
+- **Class balance:** 55.3% of patients have heart disease and 44.7% don't. The classes are well balanced, so no resampling would be needed for modeling.
+- **Patient profile:** most patients are male (725 of 918), and asymptomatic (ASY) is the most common chest pain type (496 of 918).
+- **Age:** patients with heart disease tend to be somewhat older than those without.
+- **Strongest numeric relationships with HeartDisease:** `Oldpeak` (positive: higher values go with disease) and `MaxHR` (negative: lower max heart rate goes with disease).
