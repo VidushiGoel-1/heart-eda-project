@@ -1,79 +1,57 @@
-# Heart Dataset EDA Project
+# House Prices EDA Project
 
 ## Dataset
-Heart Failure Prediction dataset (`Heart.csv`) — 918 rows, 12 columns.
-Target: `HeartDisease` (0 = no disease, 1 = disease) — classification.
+Ames Housing dataset (`house_prices.csv`): 1460 rows, 81 columns.
+Target: `SalePrice` (numeric), so this is a regression problem.
 
-## Topic 1 & 2: Loading, First Look, Data Types & Missing Values
-- Loaded data with `pd.read_csv()`
-- Checked `.head()`, `.shape`, `.info()`, `.describe()`
-- Found `RestingBP` had a minimum of 0 (impossible value) — 1 row affected
-- Checked `.dtypes`, `.isnull().sum()`, `.duplicated().sum()` — no missing values, no duplicates
+## Libraries Used
+NumPy, Pandas, Matplotlib, Seaborn
 
-## Topic 3: Handling Outliers
-- Replaced `RestingBP = 0` with median of valid values
-- Replaced `Cholesterol = 0` with median of valid values
-- Verified both fixes — no zeros remain in either column
+## Topic 1 & 2: Loading, First Look, Missing Values
+- Loaded data, checked `.head()`, `.shape`, `.info()`, `.describe()`
+- Found 19 columns with missing values
+- Distinguished two types of missing data:
+  - "Doesn't have this feature" (PoolQC, Alley, Fence, FireplaceQu, MiscFeature,
+    MasVnrType, Garage*, Bsmt* categorical columns) → filled with 'None'
+  - Genuinely missing (LotFrontage, MasVnrArea, GarageYrBlt, Electrical)
+    → filled with median (numeric) or mode (categorical)
+- Verified: `df.isnull().sum().sum()` = 0 after cleaning
 
-## Boxplot — Quick Concept
+## Topic 3: Duplicates
+- `df.duplicated().sum()` = [0]
 
-A boxplot summarizes ONE column using 5 values:
-- **Median** (line in box) → middle value of all data
-- **Q1** (left edge) → 25% of values are below this
-- **Q3** (right edge) → 75% of values are below this
-- **Box (Q1–Q3)** → where the middle 50% of values lie ("typical range")
-- **Whiskers** → normal min/max range
-- **Dots beyond whiskers** → outliers
+## Topic: Target Variable Analysis (SalePrice)
+- `SalePrice` is right-skewed (skew = 1.88, mean > median)
+- Applied `np.log1p` transform, saved as `SalePrice_log` (skew = 0.12, roughly symmetric)
+- Keeping the original `SalePrice` column as well for reference
 
-A single boxplot (e.g. `sns.boxplot(x=df['Age'])`) only describes
-that ONE column across ALL rows — it does NOT compare groups.
-To compare groups (e.g. Age by HeartDisease), split it:
-`sns.boxplot(x=df['HeartDisease'], y=df['Age'])`
+## Skewness — Quick Concept
+- Skewness = how lopsided a distribution is
+- Right-skewed: long tail toward big values, mean > median (e.g. SalePrice)
+- Fix for right-skew: log transform, `np.log1p(col)`
 
-## Topic 4: Univariate Analysis (`notebooks/04_univariate_analysis.ipynb`)
-**Operations performed:**
-- Histograms for Age, RestingBP, Cholesterol, MaxHR, Oldpeak
-- Boxplots for same 5 numeric columns
-- Countplots for Sex, ChestPainType, RestingECG, ExerciseAngina, ST_Slope
+## Topic: Outliers
+- Scatter plot of GrLivArea vs SalePrice showed 2 outliers (GrLivArea > 4000, SalePrice < 300000)
+- Dropped both rows (1460 → 1458 rows) since they don't follow the general trend
 
-**Findings:**
-- [Note anything I actually noticed — e.g. "Sex is imbalanced, mostly Male" or "Cholesterol/Age look roughly normal after cleaning"]
+## Topic: Bivariate Analysis (Regression)
+- Top correlations with SalePrice: OverallQual (0.79), GrLivArea (0.71), GarageCars (0.64), GarageArea (~0.62)
+- Found multicollinearity: GarageCars vs GarageArea (0.89), TotalBsmtSF vs 1stFlrSF (0.8)
+- Both pairs measure nearly the same thing, so only one of each would be kept when modeling
 
--> What a correlation HEATMAP shows:
+## Topic: Categorical Features vs Target (Neighborhood)
+- Neighborhood strongly affects price: median SalePrice ranges from ~$103,000 (IDOTRR) to ~$315,000 (NridgHt)
+- Most expensive: NridgHt, NoRidge, StoneBr. Cheapest: IDOTRR, BrDale (and likely MeadowV)
+- Categorical columns need groupby/boxplots, since the correlation heatmap covers numeric columns only
 
-It's a grid where every numeric column is compared against every other numeric column, and each cell shows a number between -1 and +1 telling you how strongly those two columns move together:
+## Summary of Findings (House Prices)
+- **Missing values:** most were not truly missing. NaN meant the house lacks that feature (pool, alley, fence, garage, basement), so they were filled with 'None'. Only LotFrontage, MasVnrArea, GarageYrBlt and Electrical were genuinely missing (median/mode fill).
+- **Target:** SalePrice was right-skewed (1.88). Applied log(1+x) → skew 0.12.
+- **Outliers:** 2 houses with very large GrLivArea but low price were dropped (1460 → 1458 rows).
+- **Strongest predictors:** OverallQual (0.79), GrLivArea (0.71), GarageCars (0.64), plus Neighborhood (median price from ~$103k to ~$315k).
+- **Multicollinearity:** GarageCars/GarageArea (0.89) and TotalBsmtSF/1stFlrSF (0.8) are near-duplicates, so only one of each would be kept when modeling.
 
-+1 → perfect positive relationship (as one goes up, the other always goes up too)
-0  → no relationship at all
--1 → perfect negative relationship (as one goes up, the other always goes down)
-Values in between (like 0.3 or -0.6) → weaker versions of the same idea
-
-The color (cmap='coolwarm') is just a visual shortcut so you don't have to read every number — typically red/warm = positive correlation, blue/cool = negative correlation, and the intensity of the color shows how strong it is.
-
-The annot=True part is what prints the actual number inside each cell (without it, you'd only get colors with no numbers — less precise).
-
-## Topic 5: Bivariate Analysis (`notebooks/05_bivariate_analysis.ipynb`)
-**Operations performed:**
-- Boxplot: Age by HeartDisease status
-- Correlation heatmap across all numeric columns
-
-**Findings:**
-- Patients with HeartDisease tend to be slightly older (median ~50-60) vs without (~45-58)
-- Oldpeak shows positive correlation with HeartDisease (higher Oldpeak → more likely disease)
-- MaxHR shows negative correlation with HeartDisease (lower MaxHR → more likely disease)
-
-## Topic 6: Target Variable Analysis (`notebooks/06_target_variable_analysis.ipynb`)
-**Operations performed:**
-- `.value_counts()` and `.value_counts(normalize=True)` on HeartDisease
-- Countplot of HeartDisease
-
-**Findings:**
-- Class split: 55.3% HeartDisease=1, 44.7% HeartDisease=0
-
-## Summary of Findings (Heart Failure Prediction)
-- **Dataset:** 918 patients, 12 columns. Target is `HeartDisease` (0 = no, 1 = yes), so it's a classification problem.
-- **Data quality:** no null values and no duplicate rows. Two columns had impossible zeros hidden in them: `RestingBP` (1 row) and `Cholesterol`. Both were replaced with the median of the valid values in that column.
-- **Class balance:** 55.3% of patients have heart disease and 44.7% don't. The classes are well balanced, so no resampling would be needed for modeling.
-- **Patient profile:** most patients are male (725 of 918), and asymptomatic (ASY) is the most common chest pain type (496 of 918).
-- **Age:** patients with heart disease tend to be somewhat older than those without.
-- **Strongest numeric relationships with HeartDisease:** `Oldpeak` (positive: higher values go with disease) and `MaxHR` (negative: lower max heart rate goes with disease).
+## Files
+- `house_prices.csv`: dataset
+- `[your notebook name].ipynb`: EDA notebook
+- `README.md`: this file
